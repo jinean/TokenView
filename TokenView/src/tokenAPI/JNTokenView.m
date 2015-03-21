@@ -9,21 +9,6 @@
 #import "JNTokenView.h"
 #import <AVFoundation/AVFoundation.h>
 
-#define TOKEN_IMAGE_FORMAT @"digital_%d.png"
-#ifndef TOKENIMAGE
-#define TOKENIMAGE(_digital_) \
-    [NSString stringWithFormat:TOKEN_IMAGE_FORMAT,_digital_]
-#endif
-
-#if __has_feature(objc_arc)
-#define JN_AUTORELEASE(exp) exp
-#define JN_RELEASE(exp) exp
-#define JN_RETAIN(exp) exp
-#else
-#define JN_AUTORELEASE(exp) [exp autorelease]
-#define JN_RELEASE(exp) [exp release]
-#define JN_RETAIN(exp) [exp retain]
-#endif
 
 
 @interface JNTokenNumberView : UIImageView
@@ -35,12 +20,6 @@
 
 @implementation JNTokenNumberView
 
-- (void)dealloc
-{
-#if ! __has_feature(objc_arc)
-    [super dealloc];
-#endif
-}
 
 - (void)setToNumber:(NSInteger)toNumber
 {
@@ -65,11 +44,11 @@
 {
     _nowNumber = nowNumber;
     
-    self.image = [UIImage imageNamed:TOKENIMAGE(nowNumber)];
+    self.image = [UIImage imageNamed:[NSString stringWithFormat:@"digital_%d.png",(int)nowNumber]];
     
     if(_nowNumber != self.toNumber)
     {
-        [self performSelector:@selector(_setToNumber:) withObject:[NSNumber numberWithInt:self.toNumber] afterDelay:0.01];
+        [self performSelector:@selector(_setToNumber:) withObject:[NSNumber numberWithInteger:self.toNumber] afterDelay:0.01];
     }
 }
 
@@ -78,9 +57,9 @@
 
 @interface JNTokenView()
 
-@property (nonatomic, JN_STRONG) NSMutableArray *array;
-@property (nonatomic, JN_STRONG) UIImageView    *bgImageView;
-@property (nonatomic, JN_STRONG) AVAudioPlayer  *player;
+@property (nonatomic, strong) NSMutableArray *array;
+@property (nonatomic, strong) UIImageView    *bgImageView;
+@property (nonatomic, strong) AVAudioPlayer  *player;
 
 @end
 
@@ -91,21 +70,6 @@
 
     [_player        stop];
     
-#if ! __has_feature(objc_arc)
-    [_array         release];
-    [_tokenCode     release];
-    [_bgImageView   release];
-    [_player        release];
-#endif
-    _array          = nil;
-    _tokenCode      = nil;
-    _bgImageView    = nil;
-    _player         = nil;
-    
-#if ! __has_feature(objc_arc)
-    [super dealloc];
-#endif
-    
 }
 
 - (id)initWithFrame:(CGRect)frame
@@ -113,11 +77,11 @@
     self = [super initWithFrame:frame];
     if (self)
     {
-        self.array = JN_AUTORELEASE([[NSMutableArray alloc]init]);
+        self.array = [[NSMutableArray alloc]init];
         
         UIImage *img = [UIImage imageNamed:@"token_bg.png"];
         
-        self.bgImageView = JN_AUTORELEASE([[UIImageView alloc] initWithImage:img]);
+        self.bgImageView = [[UIImageView alloc] initWithImage:img];
         
         [self.bgImageView setFrame:CGRectMake(0, 0, img.size.width, img.size.height)];
         
@@ -128,17 +92,17 @@
 
 - (void)setTokenCode:(NSString *)tokenCode
 {
-    _tokenCode      = [tokenCode copy];
+    _tokenCode      = tokenCode;
     
-    int length      = [_tokenCode length];
+    int length      = (int)[_tokenCode length];
     
-    int nowLength   = [self.array count];
+    int nowLength   = (int)[self.array count];
     
     if(nowLength < length)
     {
         while ((length - (nowLength++))>0)
         {
-            JNTokenNumberView *number = JN_AUTORELEASE([[JNTokenNumberView alloc]initWithFrame:CGRectZero]);
+            JNTokenNumberView *number = [[JNTokenNumberView alloc]initWithFrame:CGRectZero];
             
             [self addSubview:number];
             
@@ -159,9 +123,9 @@
         }
     }
     
-    CGSize size = [UIImage imageNamed:TOKENIMAGE(0)].size;
+    CGSize size = [UIImage imageNamed:@"digital_0.png"].size;
     
-    length      = [self.array count];
+    length      = (int)[self.array count];
     
     int offX    = 2;
     int _X      = 64;
@@ -198,7 +162,7 @@
     
     NSError  *error;
     
-    self.player  = JN_AUTORELEASE([[AVAudioPlayer alloc] initWithContentsOfURL:url error:&error]);
+    self.player  = [[AVAudioPlayer alloc] initWithContentsOfURL:url error:&error];
     
     self.player.numberOfLoops = 0;
     
@@ -206,7 +170,7 @@
     
     NSString * new = [tokenCode substringWithRange:NSMakeRange(1, [tokenCode length]-1)];
     
-    [self performSelector:@selector(_read:) withObject:new afterDelay:0.5];
+    [self performSelector:@selector(_read:) withObject:new afterDelay:0.7];
     
 }
 
